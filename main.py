@@ -2,7 +2,7 @@ import random
 
 from rich import print
 
-from data import blue, yellow, green, red, Marble, players, cardCount, deck, getOutList, board, someoneWon
+from data import blue, yellow, green, red, Marble, players, cardCount, deck, board, someoneWon, Action, Cards
 
 for player in players:
     for i in range(0, 4):
@@ -28,19 +28,59 @@ input("Exchanged cards\n")
 
 def playTurn(players):
     player = [player for player in players if player.myTurn][0]
-    cardsAvailable = player.hand
-    if sum([marble.onHomebase for marble in player.marbles]) == 4:
-        cardsAvailable = [card for card in cardsAvailable if card.value in getOutList]
+    actionsAvailable = []
+    cardsAvailable = []
+
+    cardsAvailable += [card for card in player.hand if Action.STEAL in card.value['Actions']]
+    if any([card for card in player.hand if Action.STEAL in card.value['Actions']]):
+        actionsAvailable.append(Action.STEAL)
+    cardsAvailable += [card for card in player.hand if Action.JOKER in card.value['Actions']]
+    if any([card for card in player.hand if Action.JOKER in card.value['Actions']]):
+        actionsAvailable.append(Action.JOKER)
+
+    if sum([marble.onHomebase for marble in player.marbles]) != 0:
+        if board[player.startPos] == None or board[player.startPos].freshOnSpawn == False:
+            cardsAvailable += [card for card in player.hand if Action.LEAVEHOMEBASE in card.value['Actions']]
+            if any([card for card in player.hand if Action.LEAVEHOMEBASE in card.value['Actions']]):
+                actionsAvailable.append(Action.LEAVEHOMEBASE)
+    for marble in player.marbles:
+        highestMoveNum = 0
+        anyNotFreshOnSpawn = False
+        if not marble.onHomebase:
+            if not marble.freshOnSpawn:
+                anyNotFreshOnSpawn = True
+            moveNum = marble.calculateAvailableSpaces()
+            if moveNum > highestMoveNum:
+                highestMoveNum = moveNum
+    cardsAvailable += [card for card in player.hand if card.value['Value'] != None and any([value for value in card.value['Value'] if value <= highestMoveNum])]
+    if any([card for card in player.hand if card.value['Value'] != None and any([value for value in card.value['Value'] if value <= highestMoveNum])]):
+        actionsAvailable += [Action.MOVE, Action.MOVEFINISH]
+    if anyNotFreshOnSpawn:
+        addJonge = False
+        for marble in player.partner.marbles:
+            if not marble.onHomebase:
+                if not marble.freshOnSpawn:
+                    addJonge = True
+        if addJonge:
+            cardsAvailable += [card for card in player.hand if Action.EXCHANGE in card.value['Actions']]
+            if any([card for card in player.hand if Action.EXCHANGE in card.value['Actions']]):
+                actionsAvailable.append(Action.EXCHANGE)
+
     if cardsAvailable == []:
         player.hand = []
     else:
-        print([card.value for card in cardsAvailable])
+        print([card.name for card in cardsAvailable])
         selectedCard = input(f"What card should {player.color} play? ")
-        action = input(f"What action do you want to do? ")
         for card in cardsAvailable:
-            if str(card.value) == selectedCard:
-                player.playCard(card, action)
+            if card.name == selectedCard:
                 break
+        print([action.name for action in actionsAvailable if action in card.value['Actions']])
+        selectedAction = input(f"What action do you want to do? ")
+        for action in actionsAvailable:
+            if action.name == selectedAction:
+                break
+        player.playCard(card, action, None)
+
     player.myTurn = False
     if player.color == "blue":
         green.myTurn = True

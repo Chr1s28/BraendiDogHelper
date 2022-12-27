@@ -72,16 +72,7 @@ def generateBoard():
     checkNormalSpace(56)
     if len(playedCardStack) > 0:
         card = (playedCardStack[-1])
-        if card.value == 1:
-            cardString = f"Ass"
-        elif card.value == 11:
-            cardString = f"Jonge"
-        elif card.value == 12:
-            cardString = f"Queen"
-        elif card.value == 13:
-            cardString = f"King"
-        else:
-            cardString = str(card.value)
+        cardString = card.name
     else:
         cardString = None
     boardString += f" Last played card: {cardString}			    "
@@ -156,7 +147,7 @@ def generateBoard():
         elif card.value == 13:
             handString += f"King "
         else:
-            handString += f"{card.value} "
+            handString += f"{card.name} "
     boardString += "[blue]	Hand: "+handString+"\n"
 
     console.print(boardString)

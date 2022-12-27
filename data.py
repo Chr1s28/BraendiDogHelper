@@ -29,7 +29,7 @@ class Player:
         self.hand.append(stolenCard)
         player.hand.remove(stolenCard)
     
-    def playCard(self, card, action):
+    def playCard(self, card, action, actionData):
         global board
         self.hand.remove(card)
         playedCardStack.append(card)
@@ -43,6 +43,7 @@ class Player:
             self.marbles[-1].pos = self.startPos
             board[self.startPos] = self.marbles[-1]
         elif action == Action.MOVE:
+            pass
 
 
 class Action(Enum):
@@ -51,6 +52,24 @@ class Action(Enum):
     LEAVEHOMEBASE = 3
     STEAL = 4
     EXCHANGE = 5
+    JOKER = 6
+
+class Cards(Enum):
+    __order__ = 'ASS TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN JONGE QUEEN KING JOKER'
+    ASS = {'Value': [1, 11], 'Actions': [Action.MOVE, Action.MOVEFINISH, Action.LEAVEHOMEBASE]}
+    TWO = {'Value': [2], 'Actions': [Action.MOVE, Action.MOVEFINISH, Action.STEAL]}
+    THREE = {'Value': [3], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    FOUR = {'Value': [4], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    FIVE = {'Value': [5], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    SIX = {'Value': [6], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    SEVEN = {'Value': [1, 2, 3, 4, 5, 6, 7], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    EIGHT = {'Value': [8], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    NINE = {'Value': [9], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    TEN = {'Value': [10], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    JONGE = {'Value': None, 'Actions': [Action.EXCHANGE]}
+    QUEEN = {'Value': [12], 'Actions': [Action.MOVE, Action.MOVEFINISH]}
+    KING = {'Value': [13], 'Actions': [Action.MOVE, Action.MOVEFINISH, Action.LEAVEHOMEBASE]}
+    JOKER = {'Value': None, 'Actions': [Action.JOKER]}
 
 class Marble:
     def __init__(self, pos, onHomebase) -> None:
@@ -65,6 +84,7 @@ class Marble:
                 maxMove = i
             elif not board[self.pos+i].freshOnSpawn:
                 maxMove = i
+        return maxMove
 
 class Deck:
     def __init__(self) -> None:
@@ -72,10 +92,10 @@ class Deck:
 
     def build(self):
         for suit in ["Spades", "Clubs", "Diamonds", "Hearts"]:
-            for value in range(1, 14):
-                self.cards.append(Card(suit, value))
-        self.cards.append(Card(suit=None, value="Joker"))
-        self.cards.append(Card(suit=None, value="Joker"))
+            for value in range(0, 13):
+                self.cards.append(list(Cards)[value])
+        self.cards.append(Cards.JOKER)
+        self.cards.append(Cards.JOKER)
     
     def shuffle(self):
         for i in range(len(self.cards)-1,0,-1):
@@ -84,13 +104,6 @@ class Deck:
     
     def drawCard(self):
         return self.cards.pop()
-
-class Card:
-    def __init__(self, suit, value) -> None:
-        self.suit = suit
-        self.value = value
-
-getOutList = [1, 13, "Joker"]
 
 board = [None]*64
 players = []
